@@ -302,18 +302,39 @@ class AutoStemm:
         'sufix': {}
     }
 
-    def __init__(self, text):
+    def __init__(self, text, id):
 
-        tokenizer = RegexpTokenizer(r'\w+', flags=re.UNICODE)
-        tokens = tokenizer.tokenize(' '.join(text).lower())
+        try:
+            tokenizer = RegexpTokenizer(r'\w+', flags=re.UNICODE)
+            tokens = tokenizer.tokenize(' '.join(text).lower())
+            new_tokens = []
 
-        self.raw_text = ' '.join(tokens)
+            for token in tokens:
+                new_token = token + '#'
+                new_tokens.append(new_token)
+        except TypeError:
+            file = open('logs.txt', 'a')
+            exp = TypeError
+            file.write(id)
+            file.write(str(exp.__traceback__))
+
+
+        self.raw_text = ' '.join(new_tokens)
 
     def get_sufix_freq(self):
-        return self.data['sufix']
+
+        sufix_dic = self.data['sufix']
+
+        return sufix_dic
 
     def get_letter_freq(self):
-        return self.data['letter']
+
+        letter_dic = self.data['letter']
+
+        return letter_dic
+
+    def get_text(self):
+        return self.raw_text
 
     def freq_counter(self):
 
@@ -324,7 +345,7 @@ class AutoStemm:
 
         for token in tokens:
 
-            for l in token:
+            for l in token[:-1]:
 
                 try:
                     freq = letter_freq.get(l.lower())
@@ -339,7 +360,7 @@ class AutoStemm:
                 for size in range(1, 8):
 
                     if len(token) > size:
-                        sufix = token[-size:]
+                        sufix = token[-size:-1]
 
                         try:
                             freq = sufix_freq.get(sufix)
@@ -349,6 +370,16 @@ class AutoStemm:
                             freq = 1
                             sufix_freq[sufix] = freq
 
+        total_count = sum(letter_freq.values())
+
+        for key, count in zip(letter_freq.keys(), letter_freq.values()):
+            letter_freq[key] = count / total_count
+
+        total_count = sum(sufix_freq.values())
+
+        for key, count in zip(sufix_freq.keys(), sufix_freq.values()):
+            sufix_freq[key] = count / total_count
+        sufix_freq.pop('')
         self.data['letter'] = letter_freq
         self.data['sufix'] = sufix_freq
 
@@ -362,32 +393,33 @@ class AutoStemm:
 
         sufixes = list(sufix_freq.keys())
 
-        SIZE = len(sufixes)
-        STEP = 1 / 1000
+        size = len(sufixes)
+        step = 1 / 100
         percent = 0
         temp = 0
         print("Stemming: ")
         total = 0
-
+        print('Loading: ', end='')
         for sufix in sufixes:
-
-            if int(percent) >= 10:
+            signature[sufix] = []
+            if int(percent) >= 100:
                 total += percent
                 percent = 0
-                print('\nLoaded ', str(total) + '%')
+                print('\nLoaded {:.2f}% Finished!'.format(total))
+                print('Loading: ', end='')
 
-            if temp is int(SIZE * STEP):
-                percent += 0.1
+            if temp is int(size * step):
+                percent += 1
                 temp = 0
                 print('#', end='')
 
             try:
-                search = re.findall(r'\w+' + str(sufix), self.raw_text)
+                search = re.findall(r'\w+' + str(sufix) + '#', self.raw_text)
 
-                for word in search:
-                    stem = word.lower().replace(sufix, '')
+                for word in set(search):
+                    stem = word.lower().replace(sufix + '#', '')
                     freq = sufix_freq[sufix]
-                    signature[sufix] = (stem, word, sufix, freq)
+                    signature[sufix].append((stem, word.lower().replace('#', ''), sufix, freq))
 
             except re.error:
                 print("\n Sufixo: ", sufix)

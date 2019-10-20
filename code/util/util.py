@@ -10,7 +10,31 @@ from pandas import Series
 import os
 from nltk import RegexpTokenizer
 
-__name__ = "preprocess.py"
+__name__ = "util.py"
+
+
+def save_stemms(stemmed_data, name):
+    stems = []
+    words = []
+    sufix = []
+    s_freq = []
+    # (stem, word, sufix, freq)
+    for list_tup in stemmed_data.values():
+
+        for el in list_tup:
+            stems.append(el[0])
+            words.append(el[1])
+            sufix.append(el[2])
+            s_freq.append(el[3])
+
+    df = pd.DataFrame({
+        'stems': stems,
+        'words': words,
+        'sufix': sufix,
+        'freq': s_freq
+    })
+
+    df.to_csv('stemmed/'+name+'.csv', index=False)
 
 
 def get_noise(new=None):
