@@ -304,10 +304,10 @@ class AutoStemm:
 
     def __init__(self, text, id):
 
+        new_tokens = []
         try:
             tokenizer = RegexpTokenizer(r'\w+', flags=re.UNICODE)
             tokens = tokenizer.tokenize(' '.join(text).lower())
-            new_tokens = []
 
             for token in tokens:
                 new_token = token + '#'
@@ -317,7 +317,6 @@ class AutoStemm:
             exp = TypeError
             file.write(id)
             file.write(str(exp.__traceback__))
-
 
         self.raw_text = ' '.join(new_tokens)
 
