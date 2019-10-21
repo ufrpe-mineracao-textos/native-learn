@@ -305,18 +305,13 @@ class AutoStemm:
     def __init__(self, text, id):
 
         new_tokens = []
-        try:
-            tokenizer = RegexpTokenizer(r'\w+', flags=re.UNICODE)
-            tokens = tokenizer.tokenize(' '.join(text).lower())
 
-            for token in tokens:
-                new_token = token + '#'
-                new_tokens.append(new_token)
-        except TypeError:
-            file = open('logs.txt', 'a')
-            exp = TypeError
-            file.write(id)
-            file.write(str(exp.__traceback__))
+        tokenizer = RegexpTokenizer(r'\w+', flags=re.UNICODE)
+        tokens = tokenizer.tokenize(' '.join(text).lower())
+
+        for token in tokens:
+            new_token = token + '#'
+            new_tokens.append(new_token)
 
         self.raw_text = ' '.join(new_tokens)
 

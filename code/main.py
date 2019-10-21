@@ -9,12 +9,12 @@ import pandas as pd
 from nltk.tokenize import RegexpTokenizer
 from util.preprocess import prepData, AutoStemm
 from util.util import save_stemms
+
 # --- Tirando referências -----
 
 path = r'../datasets/'
 data_list = os.listdir(path)
 prep = prepData(path)
-
 
 # prep.label_data('text-label.csv')
 # sufixes = pd.read_csv('sufix.csv')['sufix']
@@ -25,56 +25,65 @@ for name, data in zip(dataset.keys(), dataset.values()):
     print('Processando: ', name)
     scripture = data['Scripture']
 
-    stem = AutoStemm(scripture, name)
+    try:
 
-    stem.freq_counter()
+        stem = AutoStemm(scripture, name)
 
-    sufixies = stem.get_sufix_freq().keys()
-    s_freqs = stem.get_letter_freq().values()
+        stem.freq_counter()
 
-    stem.freq_counter()
-    letter_freq = stem.get_letter_freq()
-    stemmed_words = stem.stem_words()
-    save_stemms(stemmed_words, name)
+        sufixies = stem.get_sufix_freq().keys()
+        s_freqs = stem.get_letter_freq().values()
 
-    all_coo = []
+        stem.freq_counter()
+        letter_freq = stem.get_letter_freq()
+        stemmed_words = stem.stem_words()
+        save_stemms(stemmed_words, name)
 
-    for suf, s_freq in zip(sufixies, s_freqs):
+        all_coo = []
 
-        ls_freq = 1
-        for l in suf:
-            l_freq = letter_freq.get(l)
-            ls_freq *= l_freq
-        co_o = s_freq * math.log((s_freq / ls_freq), 10)
-        all_coo.append((suf, co_o))
+        for suf, s_freq in zip(sufixies, s_freqs):
 
-    all_coo.sort(key=lambda tup: tup[1])
+            ls_freq = 1
+            for l in suf:
+                l_freq = letter_freq.get(l)
+                ls_freq *= l_freq
+            co_o = s_freq * math.log((s_freq / ls_freq), 10)
+            all_coo.append((suf, co_o))
 
-    signature = {}
-    sel_stem = []
-    temp = 0
-    print('Finding stems: ', end='')
+        all_coo.sort(key=lambda tup: tup[1])
 
-    stemmed = pd.read_csv('stemmed/'+name+'.csv')
-    for tupl in all_coo[:100]:
+        signature = {}
+        sel_stem = []
+        temp = 0
+        print('Finding stems: ', end='')
 
-        print('#', end='')
-        stems = stemmed[stemmed['sufix'] == tupl[0]]['stems']
+        stemmed = pd.read_csv('stemmed/' + name + '.csv')
 
-        for ste in list(stems):
-            related_sufix = stemmed[stemmed['stems'] == ste]['sufix'].drop_duplicates()
-            words = stemmed[stemmed['stems'] == ste]['words'].drop_duplicates()
+        for tupl in all_coo[:100]:
 
-            if len(list(related_sufix)) >= 2 and len(list(stems)) <= 5:
-                signature[ste] = words
-                try:
-                    sel_stem.append(ste)
-                except TypeError:
-                    print(stems)
-                    print(stem)
-                    breakpoint()
-    print()
+            print('#', end='')
+            stems = stemmed[stemmed['sufix'] == tupl[0]]['stems']
 
-    df = pd.DataFrame(signature)
+            for ste in list(stems):
+                related_sufix = stemmed[stemmed['stems'] == ste]['sufix'].drop_duplicates()
+                words = stemmed[stemmed['stems'] == ste]['words'].drop_duplicates()
 
-    df.to_csv('stems/' + name + '.csv', index=False)
+                if len(list(related_sufix)) >= 2 and len(list(stems)) <= 5:
+                    signature[ste] = words
+                    try:
+                        sel_stem.append(ste)
+                    except TypeError:
+                        print(stems)
+                        print(stem)
+                        breakpoint()
+        print()
+
+        df = pd.DataFrame(signature)
+
+        df.to_csv('stems/' + name + '.csv', index=False)
+
+    except TypeError:
+        file = open('logs.txt', 'a')
+        exp = TypeError
+        file.write(name)
+        file.write(str(exp.__traceback__))
